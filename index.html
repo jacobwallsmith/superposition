@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Superposition
+  </title>
+  <style>
+  body {
+    font-family: sans-serif;
+  }
+  h1 {
+    text-align: left;
+  }
+  table {
+    border-collapse:collapse;
+  }
+  td, th {
+    text-align: center;
+    width: 50px;
+    height: 30px;
+    font-size: 24px;
+  }
+  .hidden-cell {
+    background-color: grey;
+    border: none;
+  }
+  #numberList {
+    font-size: 24px;
+  }
+  .orange-text {
+  color: orange;
+  }
+  td:nth-child(3) {
+  border: 2px solid orange;
+  }
+  #masterKey {
+  border: 5px solid orange;
+  } 
+</style>
+</head>
+
+<body>
+  <h1>Superposition</h1>
+  <p id="turnIndicator"></p>
+  
+    <table border="2" cellpadding="10">
+    <tr>
+      <th>P1</th>
+      <th>P2</th>
+      <th>Key</th>
+    </tr>
+    <tr>
+      <td id="row1-p1"></td>
+      <td id="row1-p2"></td>
+      <td id="row1-key"></td>
+    </tr>
+    <tr>
+      <td id="row2-p1"></td>
+      <td id="row2-p2"></td>
+      <td id="row2-key"></td>
+    </tr>
+    <tr>
+      <td id="row3-p1"></td>
+      <td id="row3-p2"></td>
+      <td id="row3-key"></td>
+    </tr>
+    <tr>
+      <td class=hidden-cell></td>
+      <td class=hidden-cell></td>
+      <td id="masterKey"></td>
+    </tr>
+  </table>
+
+  <div id="numberList">
+  <span id="num-1">1</span>
+  <span id="num-2">2</span>
+  <span id="num-3">3</span>
+  <span id="num-4">4</span>
+  <span id="num-5">5</span>
+  <span id="num-6">6</span>
+  <span id="num-7">7</span>
+  <span id="num-8">8</span>
+  <span id="num-9">9</span>
+  <span id="num-10">10</span>
+</div>
+
+<p></p>
+<button id="newGameBtn">Start a New Game</button>
+
+  <h2>Rules</h2>
+<p>This is a 2 player game. Win 2 out of 3 rows to win the game.</p>
+<p>Take turns writing a number from 1 to 10 in <b>any</b> empty cell, in <b>any</b> order, including those in your opponents column. Each number may only be used once.</p>
+<p>Once the grid is full, compare each row's P1 and P2 numbers to find the winner of that row.</p>
+<p>If the 'Key' of that row and the orange 'Master Key' cell have the same parity (i.e. both are odd, or both are even), the player with the lower number wins that row. If the Key & Master Key parity doesn't match, the higher number wins.</p>
+
+<script type="module">
+    //FIREBASE ONLINE DATABASE INITIALISATION
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+  import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js";
+
+  const firebaseConfig = {
+  apiKey: "AIzaSyCAHV9r5lmNQ0PSOCKvHhab6-lD3H_wvdc",
+  authDomain: "superposition-rtdb.firebaseapp.com",
+  databaseURL: "https://superposition-rtdb-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "superposition-rtdb",
+  storageBucket: "superposition-rtdb.firebasestorage.app",
+  messagingSenderId: "544551182164",
+  appId: "1:544551182164:web:97745cdb2261230950f2c1"
+};
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  window.gridRef = ref(db, "grid");
+  window.saveGrid = function(gridData) {
+    set(window.gridRef, gridData);
+  };
+  window.subscribeToGrid = function(callback) {
+    onValue(window.gridRef, function(snapshot) {
+      callback(snapshot.val());
+    });
+  };
+  window.dispatchEvent(new Event("firebaseReady"));
+</script>
+
+  <script>
+    // SUPERPOSITION GAME SCRIPT
+    let grid = {
+      row1: { p1: null, p2: null, key: null },
+      row2: { p1: null, p2: null, key: null },
+      row3: { p1: null, p2: null, key: null },
+      masterKey: null
+    };
+
+    function placeNumber(grid, row, column, number) {
+      if (number < 1 || number > 10 || !Number.isInteger(number)) {
+        alert("Pick a number from 1-10");
+        return grid;
+      }
+
+      let allValues = [
+        grid.row1.p1, grid.row1.p2, grid.row1.key,
+        grid.row2.p1, grid.row2.p2, grid.row2.key,
+        grid.row3.p1, grid.row3.p2, grid.row3.key,
+        grid.masterKey
+      ];
+
+      if (allValues.includes(number)) {
+        alert("That number is already used!");
+        return grid;
+      }
+
+      if (row === "masterKey") {
+        if (grid.masterKey !== null) {
+          alert("Master Key cell is already filled!");
+          return grid;
+        }
+        grid.masterKey = number;
+      } else {
+        if (grid[row][column] !== null) {
+          alert("That cell is already filled!");
+          return grid;
+        }
+        grid[row][column] = number;
+      }
+
+      return grid;
+    }
+
+    function updateTurnIndicator() {
+  let allValues = [
+    getCellValue(grid, "row1", "p1"), getCellValue(grid, "row1", "p2"), getCellValue(grid, "row1", "key"),
+    getCellValue(grid, "row2", "p1"), getCellValue(grid, "row2", "p2"), getCellValue(grid, "row2", "key"),
+    getCellValue(grid, "row3", "p1"), getCellValue(grid, "row3", "p2"), getCellValue(grid, "row3", "key"),
+    getCellValue(grid, "masterKey", null)
+  ];
+
+  let filledCount = allValues.filter(function(v) { return v !== null; }).length;
+
+  let indicator = document.getElementById("turnIndicator");
+  indicator.textContent = (filledCount % 2 === 0) ? "P1's Turn" : "P2's Turn";
+}
+
+    function isEven(n) {
+      return n % 2 === 0;
+    }
+
+    function getRowWinner(grid, rowName) {
+      let row = grid[rowName];
+      let key = row.key;
+      let masterKey = grid.masterKey;
+
+      if (row.p1 === null || row.p2 === null || key === null || masterKey === null) {
+        return null;
+      }
+
+      let sameParity = isEven(key) === isEven(masterKey);
+
+      if (sameParity) {
+        return row.p1 < row.p2 ? "p1" : "p2";
+      } else {
+        return row.p1 > row.p2 ? "p1" : "p2";
+      }
+    }
+
+    function isGridFull(grid) {
+      let allValues = [
+        grid.row1.p1, grid.row1.p2, grid.row1.key,
+        grid.row2.p1, grid.row2.p2, grid.row2.key,
+        grid.row3.p1, grid.row3.p2, grid.row3.key,
+        grid.masterKey
+      ];
+      return !allValues.includes(null);
+    }
+
+function getGameWinner(grid) {
+  if (!isGridFull(grid)) {
+    return "no winner yet";
+  }
+
+  let rows = ["row1", "row2", "row3"];
+  let p1Wins = 0;
+  let p2Wins = 0;
+
+  for (let rowName of rows) {
+    let winner = getRowWinner(grid, rowName);
+    if (winner === "p1") p1Wins++;
+    if (winner === "p2") p2Wins++;
+  }
+
+  if (p1Wins >= 2) return "p1";
+  if (p2Wins >= 2) return "p2";
+  return "Game over - it's a tie somehow?";
+}
+
+    // ----- New: connecting logic to the page -----
+function getCellValue(grid, rowName, col) {
+  if (rowName === "masterKey") {
+    return grid.masterKey === undefined ? null : grid.masterKey;
+  }
+  if (!grid[rowName]) return null;
+  let value = grid[rowName][col];
+  return value === undefined ? null : value;
+}
+
+    function updateDisplay() {
+  document.getElementById("masterKey").textContent =
+    getCellValue(grid, "masterKey", null) === null ? "" : getCellValue(grid, "masterKey", null);
+
+  let rows = ["row1", "row2", "row3"];
+  let cols = ["key", "p1", "p2"];
+
+  rows.forEach(function(rowName) {
+    cols.forEach(function(col) {
+      let value = getCellValue(grid, rowName, col);
+      let cell = document.getElementById(rowName + "-" + col);
+      cell.textContent = value === null ? "" : value;
+    });
+  });
+  updateNumberList();
+  updateTurnIndicator();
+}
+
+  function updateNumberList() {
+  let allValues = [
+    grid.row1.p1, grid.row1.p2, grid.row1.key,
+    grid.row2.p1, grid.row2.p2, grid.row2.key,
+    grid.row3.p1, grid.row3.p2, grid.row3.key,
+    grid.masterKey
+  ];
+
+  for (let n = 1; n <= 10; n++) {
+    let el = document.getElementById("num-" + n);
+    el.style.color = allValues.includes(n) ? "#ccc" : "";
+  }
+}
+
+    function handleCellClick(rowName, column) {
+  let input = prompt("Enter a number from 1 to 10:");
+  if (input === null) return;
+
+  let number = parseInt(input);
+  let updatedGrid = placeNumber(grid, rowName, column, number);
+
+  window.saveGrid(updatedGrid);
+}
+
+  window.addEventListener("firebaseReady", function() {
+  window.subscribeToGrid(function(data) {
+    if (data === null) data = {};
+
+    grid = {
+      row1: { p1: data.row1?.p1 ?? null, p2: data.row1?.p2 ?? null, key: data.row1?.key ?? null },
+      row2: { p1: data.row2?.p1 ?? null, p2: data.row2?.p2 ?? null, key: data.row2?.key ?? null },
+      row3: { p1: data.row3?.p1 ?? null, p2: data.row3?.p2 ?? null, key: data.row3?.key ?? null },
+      masterKey: data.masterKey ?? null
+    };
+
+    updateDisplay();
+
+    setTimeout(function() {
+      let result = getGameWinner(grid);
+      if (result === "p1" || result === "p2") {
+        alert("Game over! Winner: " + result.toUpperCase());
+      }
+    }, 50);
+  });
+});
+
+    // Wire up clicks for each cell
+    document.getElementById("masterKey").addEventListener("click", function() {
+      handleCellClick("masterKey", null);
+    });
+
+    ["row1", "row2", "row3"].forEach(function(rowName) {
+      ["key", "p1", "p2"].forEach(function(col) {
+        document.getElementById(rowName + "-" + col)
+          .addEventListener("click", function() {
+            handleCellClick(rowName, col);
+          });
+      });
+    });
+
+    function newGame() {
+  let emptyGrid = {
+    row1: { p1: null, p2: null, key: null },
+    row2: { p1: null, p2: null, key: null },
+    row3: { p1: null, p2: null, key: null },
+    masterKey: null
+  };
+  window.saveGrid(emptyGrid);
+}
+
+document.getElementById("newGameBtn").addEventListener("click", newGame);
+  </script>
+
+</body>
+</html>
