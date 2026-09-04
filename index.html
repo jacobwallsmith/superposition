@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Superposition
   </title>
   <style>
@@ -34,6 +35,9 @@
   }
   #masterKey {
   border: 5px solid orange;
+  }
+  p {
+  max-width: 90%;
   } 
 </style>
 </head>
@@ -298,11 +302,14 @@ function getCellValue(grid, rowName, col) {
     updateDisplay();
 
     setTimeout(function() {
-      let result = getGameWinner(grid);
-      if (result === "p1" || result === "p2") {
-        alert("Game over! Winner: " + result.toUpperCase());
-      }
-    }, 50);
+  let result = getGameWinner(grid);
+  if (result === "p1" || result === "p2") {
+    let playAgain = confirm("Game over! Winner: " + result.toUpperCase() + "\n\nStart a new game?");
+    if (playAgain) {
+      newGame();
+    }
+  }
+}, 50);
   });
 });
 
