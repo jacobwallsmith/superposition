@@ -1,58 +1,74 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Superposition
-  </title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Superposition</title>
   <style>
-  body {
-    font-family: sans-serif;
-  }
-  h1 {
-    text-align: left;
-    font-size: 42px;
-  }
-  table {
-    border-collapse:collapse;
-  }
-  td, th {
-    text-align: center;
-    width: 75px;
-    height: 45px;
-    font-size: 36px;
-  }
-  .hidden-cell {
-    background-color: grey;
-    border: none;
-  }
-  #numberList {
-    font-size: 34px;
-  }
-  .orange-text {
-  color: orange;
-  }
-  td:nth-child(3) {
-  border: 2px solid orange;
-  }
-  #masterKey {
-  border: 5px solid orange;
-  }
-  p {
-  max-width: 90%;
-  }
-  button {
-    width: 300px;
-    height: 40px;
-    t;
-  }
-</style>
+    body {
+      font-family: sans-serif;
+    }
+    h1 {
+      text-align: left;
+      font-size: 42px;
+    }
+    table {
+      border-collapse: collapse;
+    }
+    td, th {
+      text-align: center;
+      width: 75px;
+      height: 45px;
+      font-size: 36px;
+    }
+    .hidden-cell {
+      background-color: grey;
+      border: none;
+    }
+    #numberList {
+      font-size: 34px;
+    }
+    td:nth-child(3) {
+      border: 2px solid orange;
+    }
+    .game-over-key {
+      background-color: orange;
+    }
+    #masterKey {
+      border: 5px solid orange;
+    }
+    p {
+      max-width: 90%;
+    }
+    button {
+      width: 145px;
+      height: 40px;
+    }
+    #forceResetBtn, #nineGrid {
+      width: 75px;
+      height: 18px;
+      font-size: 10px;
+      color: lightgrey;
+      border: none;
+      background-color: white;
+    }
+    .parity-match {
+      background-color: orange;
+    }
+    .row-winner {
+      background-color: lightgreen;
+    }
+  </style>
 </head>
 
 <body>
   <h1>Superposition</h1>
-  <p id="turnIndicator"></p>
-  
-    <table border="2" cellpadding="10">
+  <button id="joinBtn">Join New Game</button>
+  <button id="newGameBtn">Restart Game</button>
+  <p></p>
+  <div id="playerNames"></div>
+  <h2 id="turnIndicator"></h2>
+
+  <table border="2" cellpadding="10">
     <tr>
       <th>P1</th>
       <th>P2</th>
@@ -74,63 +90,136 @@
       <td id="row3-key"></td>
     </tr>
     <tr>
-      <td class=hidden-cell></td>
-      <td class=hidden-cell></td>
+      <td class="hidden-cell"></td>
+      <td class="hidden-cell"></td>
       <td id="masterKey"></td>
     </tr>
   </table>
 
   <div id="numberList">
-  <span id="num-1">1</span>
-  <span id="num-2">2</span>
-  <span id="num-3">3</span>
-  <span id="num-4">4</span>
-  <span id="num-5">5</span>
-  <span id="num-6">6</span>
-  <span id="num-7">7</span>
-  <span id="num-8">8</span>
-  <span id="num-9">9</span>
-  <span id="num-10">10</span>
-</div>
-
-<p></p>
-<button id="newGameBtn">Start a New Game</button>
+    <span id="num-1">1</span>
+    <span id="num-2">2</span>
+    <span id="num-3">3</span>
+    <span id="num-4">4</span>
+    <span id="num-5">5</span>
+    <span id="num-6">6</span>
+    <span id="num-7">7</span>
+    <span id="num-8">8</span>
+    <span id="num-9">9</span>
+    <span id="num-10">10</span>
+  </div>
 
   <h2>Rules</h2>
-<p>This is a 2 player game. Win at least 2 out of 3 rows to win the game.</p>
-<p>Take turns writing a number from 1 to 10 in <b>any</b> empty box, in <b>any</b> order, including those in your opponents column. Each number may only be used once. Remaining numbers are displayed beneath the grid for ease.</p>
-<p>Once the grid is full, compare each row's P1 and P2 numbers to find the winner of that row.</p>
-<p>If the number in the 'Key' of that row and the thicker orange 'Master Key' have the same parity (i.e. both are odd, or both are even), the player with the lower number wins that row. If the Key & Master Key parity doesn't match (i.e. one is odd and one is even), the higher number wins that row.</p>
+  <p>This is a 2 player game. Win at least 2 out of 3 rows to win the overall game.</p>
+  <p>Take turns writing a number from 1 to 10 in <b>any</b> empty box, in <b>any</b> order, including those in your opponent's column. Each number may only be used once. Remaining numbers are displayed beneath the grid for ease.</p>
+  <p>Once the grid is full, each row's P1 and P2 numbers will be compared to find the winner of that row.</p>
+  <p>If the number in the 'Key' of that row and the thicker orange 'Master Key' have the same parity (i.e. both are odd, or both are even), the player with the lower number wins that row. If the Key & Master Key parity doesn't match (i.e. one is odd and one is even), the higher number wins that row.</p>
 
-<script type="module">
-    //FIREBASE ONLINE DATABASE INITIALISATION
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
-  import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js";
+  <button id="forceResetBtn">Force Reset</button>
+  <button id="nineGrid">Populate Grid</button>
 
-  const firebaseConfig = {
-  apiKey: "AIzaSyCAHV9r5lmNQ0PSOCKvHhab6-lD3H_wvdc",
-  authDomain: "superposition-rtdb.firebaseapp.com",
-  databaseURL: "https://superposition-rtdb-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "superposition-rtdb",
-  storageBucket: "superposition-rtdb.firebasestorage.app",
-  messagingSenderId: "544551182164",
-  appId: "1:544551182164:web:97745cdb2261230950f2c1"
-};
+  <script type="module">
+    // FIREBASE ONLINE DATABASE INITIALISATION
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+    import { getDatabase, ref, set, onValue, get } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js";
 
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
+    const firebaseConfig = {
+      apiKey: "AIzaSyCAHV9r5lmNQ0PSOCKvHhab6-lD3H_wvdc",
+      authDomain: "superposition-rtdb.firebaseapp.com",
+      databaseURL: "https://superposition-rtdb-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "superposition-rtdb",
+      storageBucket: "superposition-rtdb.firebasestorage.app",
+      messagingSenderId: "544551182164",
+      appId: "1:544551182164:web:97745cdb2261230950f2c1"
+    };
 
-  window.gridRef = ref(db, "grid");
-  window.saveGrid = function(gridData) {
-    set(window.gridRef, gridData);
-  };
-  window.subscribeToGrid = function(callback) {
-    onValue(window.gridRef, function(snapshot) {
-      callback(snapshot.val());
-    });
-  };
-  window.dispatchEvent(new Event("firebaseReady"));
-</script>
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // ---- Shared "empty grid" shape, used everywhere a fresh grid is needed ----
+    window.emptyGrid = function() {
+      return {
+        row1: { p1: null, p2: null, key: null },
+        row2: { p1: null, p2: null, key: null },
+        row3: { p1: null, p2: null, key: null },
+        masterKey: null
+      };
+    };
+
+    window.gridRef = ref(db, "grid");
+    window.saveGrid = function(gridData) {
+      set(window.gridRef, gridData);
+    };
+    window.subscribeToGrid = function(callback) {
+      onValue(window.gridRef, function(snapshot) {
+        callback(snapshot.val());
+      });
+    };
+
+    window.playersRef = ref(db, "players");
+
+    // Silent check on page load: do I already hold a valid, still-current seat?
+    window.checkSeat = function(callback) {
+      let myStoredSeat = localStorage.getItem("mySeat");
+      let myName = localStorage.getItem("myName");
+
+      if (!myStoredSeat) {
+        callback("spectator");
+        return;
+      }
+
+      get(window.playersRef).then(function(snapshot) {
+        let players = snapshot.val() || {};
+
+        if (myStoredSeat === "p1" && players.p1 === myName) {
+          callback("p1");
+        } else if (myStoredSeat === "p2" && players.p2 === myName) {
+          callback("p2");
+        } else {
+          localStorage.removeItem("mySeat");
+          localStorage.removeItem("myName");
+          callback("spectator");
+        }
+      });
+    };
+
+    // Active claim: only ever triggered by the "Join New Game" button
+    window.claimSeat = function(callback) {
+      get(window.playersRef).then(function(snapshot) {
+        let players = snapshot.val() || {};
+
+        if (!players.p1) {
+          let name = prompt("You're Player 1! Enter your name:") || "Player 1";
+          set(ref(db, "players/p1"), name);
+          localStorage.setItem("mySeat", "p1");
+          localStorage.setItem("myName", name);
+          window.saveGrid(window.emptyGrid());
+          callback("p1");
+        } else if (!players.p2) {
+          let name = prompt("You're Player 2! Enter your name:") || "Player 2";
+          set(ref(db, "players/p2"), name);
+          localStorage.setItem("mySeat", "p2");
+          localStorage.setItem("myName", name);
+          callback("p2");
+        } else {
+          alert("Both seats are taken already.");
+          callback("spectator");
+        }
+      });
+    };
+
+    window.subscribeToPlayers = function(callback) {
+      onValue(window.playersRef, function(snapshot) {
+        callback(snapshot.val() || {});
+      });
+    };
+
+    window.clearSeats = function() {
+      set(window.playersRef, null);
+    };
+
+    window.dispatchEvent(new Event("firebaseReady"));
+  </script>
 
   <script>
     // SUPERPOSITION GAME SCRIPT
@@ -141,20 +230,38 @@
       masterKey: null
     };
 
+    let currentP1Name = "waiting...";
+    let currentP2Name = "waiting...";
+
+    // ----- Reading a possibly-incomplete grid safely -----
+    function getCellValue(grid, rowName, col) {
+      if (rowName === "masterKey") {
+        return grid.masterKey === undefined ? null : grid.masterKey;
+      }
+      if (!grid[rowName]) return null;
+      let value = grid[rowName][col];
+      return value === undefined ? null : value;
+    }
+
+    // Single source of truth for "every value currently on the grid" —
+    // used by placeNumber, isGridFull, updateNumberList, updateTurnIndicator, handleCellClick
+    function getAllValues(grid) {
+      return [
+        getCellValue(grid, "row1", "p1"), getCellValue(grid, "row1", "p2"), getCellValue(grid, "row1", "key"),
+        getCellValue(grid, "row2", "p1"), getCellValue(grid, "row2", "p2"), getCellValue(grid, "row2", "key"),
+        getCellValue(grid, "row3", "p1"), getCellValue(grid, "row3", "p2"), getCellValue(grid, "row3", "key"),
+        getCellValue(grid, "masterKey", null)
+      ];
+    }
+
+    // ----- Game rules -----
     function placeNumber(grid, row, column, number) {
       if (number < 1 || number > 10 || !Number.isInteger(number)) {
         alert("Pick a number from 1-10");
         return grid;
       }
 
-      let allValues = [
-        grid.row1.p1, grid.row1.p2, grid.row1.key,
-        grid.row2.p1, grid.row2.p2, grid.row2.key,
-        grid.row3.p1, grid.row3.p2, grid.row3.key,
-        grid.masterKey
-      ];
-
-      if (allValues.includes(number)) {
+      if (getAllValues(grid).includes(number)) {
         alert("That number is already used!");
         return grid;
       }
@@ -175,20 +282,6 @@
 
       return grid;
     }
-
-    function updateTurnIndicator() {
-  let allValues = [
-    getCellValue(grid, "row1", "p1"), getCellValue(grid, "row1", "p2"), getCellValue(grid, "row1", "key"),
-    getCellValue(grid, "row2", "p1"), getCellValue(grid, "row2", "p2"), getCellValue(grid, "row2", "key"),
-    getCellValue(grid, "row3", "p1"), getCellValue(grid, "row3", "p2"), getCellValue(grid, "row3", "key"),
-    getCellValue(grid, "masterKey", null)
-  ];
-
-  let filledCount = allValues.filter(function(v) { return v !== null; }).length;
-
-  let indicator = document.getElementById("turnIndicator");
-  indicator.textContent = (filledCount % 2 === 0) ? "P1's Turn" : "P2's Turn";
-}
 
     function isEven(n) {
       return n % 2 === 0;
@@ -212,144 +305,227 @@
       }
     }
 
-    function isGridFull(grid) {
-      let allValues = [
-        grid.row1.p1, grid.row1.p2, grid.row1.key,
-        grid.row2.p1, grid.row2.p2, grid.row2.key,
-        grid.row3.p1, grid.row3.p2, grid.row3.key,
-        grid.masterKey
-      ];
-      return !allValues.includes(null);
+    function keyMatchesMasterKey(grid, rowName) {
+      let key = grid[rowName].key;
+      let masterKey = grid.masterKey;
+      if (key === null || masterKey === null) return false;
+      return isEven(key) === isEven(masterKey);
     }
 
-function getGameWinner(grid) {
-  if (!isGridFull(grid)) {
-    return "no winner yet";
-  }
+    function isGridFull(grid) {
+      return !getAllValues(grid).includes(null);
+    }
 
-  let rows = ["row1", "row2", "row3"];
-  let p1Wins = 0;
-  let p2Wins = 0;
+    // Returns "p1", "p2", "tie", or "no winner yet" — stable IDs only.
+    // Convert to a display name at the point you show it, not here.
+    function getGameWinner(grid) {
+      if (!isGridFull(grid)) {
+        return "no winner yet";
+      }
 
-  for (let rowName of rows) {
-    let winner = getRowWinner(grid, rowName);
-    if (winner === "p1") p1Wins++;
-    if (winner === "p2") p2Wins++;
-  }
+      let rows = ["row1", "row2", "row3"];
+      let p1Wins = 0;
+      let p2Wins = 0;
 
-  if (p1Wins >= 2) return "p1";
-  if (p2Wins >= 2) return "p2";
-  return "Game over - it's a tie somehow?";
-}
+      for (let rowName of rows) {
+        let winner = getRowWinner(grid, rowName);
+        if (winner === "p1") p1Wins++;
+        if (winner === "p2") p2Wins++;
+      }
 
-    // ----- New: connecting logic to the page -----
-function getCellValue(grid, rowName, col) {
-  if (rowName === "masterKey") {
-    return grid.masterKey === undefined ? null : grid.masterKey;
-  }
-  if (!grid[rowName]) return null;
-  let value = grid[rowName][col];
-  return value === undefined ? null : value;
-}
+      if (p1Wins >= 2) return "p1";
+      if (p2Wins >= 2) return "p2";
+      return "tie";
+    }
+
+    // ----- Display -----
+    function updatePlayerNames(players) {
+      currentP1Name = players.p1 || "waiting...";
+      currentP2Name = players.p2 || "waiting...";
+      document.getElementById("playerNames").textContent =
+        "P1: " + currentP1Name + "   |   P2: " + currentP2Name;
+      updateTurnIndicator();
+    }
+
+    function updateTurnIndicator() {
+      let filledCount = getAllValues(grid).filter(function(v) { return v !== null; }).length;
+      let indicator = document.getElementById("turnIndicator");
+      indicator.textContent = (filledCount % 2 === 0)
+        ? currentP1Name + "'s Turn"
+        : currentP2Name + "'s Turn";
+    }
+
+    function updateNumberList() {
+      let allValues = getAllValues(grid);
+      for (let n = 1; n <= 10; n++) {
+        let el = document.getElementById("num-" + n);
+        el.style.color = allValues.includes(n) ? "#ccc" : "";
+      }
+    }
+
+    function highlightResults(grid) {
+      let rows = ["row1", "row2", "row3"];
+
+      if (!isGridFull(grid)) {
+        rows.forEach(function(rowName) {
+          document.getElementById(rowName + "-key").classList.remove("parity-match");
+          document.getElementById(rowName + "-p1").classList.remove("row-winner");
+          document.getElementById(rowName + "-p2").classList.remove("row-winner");
+        });
+        return;
+      }
+
+      rows.forEach(function(rowName) {
+        let winner = getRowWinner(grid, rowName);
+        let parityMatches = keyMatchesMasterKey(grid, rowName);
+
+        document.getElementById(rowName + "-key").classList.toggle("parity-match", parityMatches);
+        document.getElementById(rowName + "-p1").classList.toggle("row-winner", winner === "p1");
+        document.getElementById(rowName + "-p2").classList.toggle("row-winner", winner === "p2");
+      });
+    }
 
     function updateDisplay() {
-  document.getElementById("masterKey").textContent =
-    getCellValue(grid, "masterKey", null) === null ? "" : getCellValue(grid, "masterKey", null);
+      document.getElementById("masterKey").textContent =
+        getCellValue(grid, "masterKey", null) === null ? "" : getCellValue(grid, "masterKey", null);
 
-  let rows = ["row1", "row2", "row3"];
-  let cols = ["key", "p1", "p2"];
+      let rows = ["row1", "row2", "row3"];
+      let cols = ["key", "p1", "p2"];
 
-  rows.forEach(function(rowName) {
-    cols.forEach(function(col) {
-      let value = getCellValue(grid, rowName, col);
-      let cell = document.getElementById(rowName + "-" + col);
-      cell.textContent = value === null ? "" : value;
-    });
-  });
-  updateNumberList();
-  updateTurnIndicator();
-}
+      rows.forEach(function(rowName) {
+        cols.forEach(function(col) {
+          let value = getCellValue(grid, rowName, col);
+          let cell = document.getElementById(rowName + "-" + col);
+          cell.textContent = value === null ? "" : value;
+        });
+      });
 
-  function updateNumberList() {
-  let allValues = [
-    grid.row1.p1, grid.row1.p2, grid.row1.key,
-    grid.row2.p1, grid.row2.p2, grid.row2.key,
-    grid.row3.p1, grid.row3.p2, grid.row3.key,
-    grid.masterKey
-  ];
-
-  for (let n = 1; n <= 10; n++) {
-    let el = document.getElementById("num-" + n);
-    el.style.color = allValues.includes(n) ? "#ccc" : "";
-  }
-}
-
-    function handleCellClick(rowName, column) {
-  let input = prompt("Enter a number from 1 to 10:");
-  if (input === null) return;
-
-  let number = parseInt(input);
-  let updatedGrid = placeNumber(grid, rowName, column, number);
-
-  window.saveGrid(updatedGrid);
-}
-
-  window.addEventListener("firebaseReady", function() {
-  window.subscribeToGrid(function(data) {
-    if (data === null) data = {};
-
-    grid = {
-      row1: { p1: data.row1?.p1 ?? null, p2: data.row1?.p2 ?? null, key: data.row1?.key ?? null },
-      row2: { p1: data.row2?.p1 ?? null, p2: data.row2?.p2 ?? null, key: data.row2?.key ?? null },
-      row3: { p1: data.row3?.p1 ?? null, p2: data.row3?.p2 ?? null, key: data.row3?.key ?? null },
-      masterKey: data.masterKey ?? null
-    };
-
-    updateDisplay();
-
-    setTimeout(function() {
-  let result = getGameWinner(grid);
-  if (result === "p1" || result === "p2") {
-    let playAgain = confirm("Game over! Winner: " + result.toUpperCase() + "\n\nStart a new game?");
-    if (playAgain) {
-      newGame();
+      updateNumberList();
+      updateTurnIndicator();
     }
-  }
-}, 50);
-  });
-});
 
-    // Wire up clicks for each cell
-    document.getElementById("masterKey").addEventListener("click", function() {
-      handleCellClick("masterKey", null);
-    });
+    // ----- Actions -----
+    function handleCellClick(rowName, column) {
+      let mySeat = localStorage.getItem("mySeat");
 
-    ["row1", "row2", "row3"].forEach(function(rowName) {
-      ["key", "p1", "p2"].forEach(function(col) {
-        document.getElementById(rowName + "-" + col)
-          .addEventListener("click", function() {
-            handleCellClick(rowName, col);
-          });
+      if (mySeat !== "p1" && mySeat !== "p2") {
+        alert("Click 'Join New Game' to start playing.");
+        return;
+      }
+
+      let filledCount = getAllValues(grid).filter(function(v) { return v !== null; }).length;
+      let currentTurn = (filledCount % 2 === 0) ? "p1" : "p2";
+
+      if (mySeat !== currentTurn) {
+        alert("It's not your turn!");
+        return;
+      }
+
+      let input = prompt("Enter a number from 1 to 10:");
+      if (input === null) return;
+
+      let number = parseInt(input);
+      let updatedGrid = placeNumber(grid, rowName, column, number);
+
+      window.saveGrid(updatedGrid);
+    }
+
+    // Shared by "Reset Game" and "Force Reset" — the only difference between
+    // those two buttons is who's allowed to click them and whether they confirm first.
+    function resetGridAndSeats() {
+      window.saveGrid(window.emptyGrid());
+      window.clearSeats();
+      localStorage.removeItem("mySeat");
+      localStorage.removeItem("myName");
+    }
+
+    window.addEventListener("firebaseReady", function() {
+      window.checkSeat(function(mySeat) {
+        // silently confirmed (or not) whether we already hold a seat
+      });
+
+      window.subscribeToPlayers(function(players) {
+        updatePlayerNames(players);
+      });
+
+      window.subscribeToGrid(function(data) {
+        if (data === null) data = {};
+
+        grid = {
+          row1: { p1: data.row1?.p1 ?? null, p2: data.row1?.p2 ?? null, key: data.row1?.key ?? null },
+          row2: { p1: data.row2?.p1 ?? null, p2: data.row2?.p2 ?? null, key: data.row2?.key ?? null },
+          row3: { p1: data.row3?.p1 ?? null, p2: data.row3?.p2 ?? null, key: data.row3?.key ?? null },
+          masterKey: data.masterKey ?? null
+        };
+
+        updateDisplay();
+        highlightResults(grid);
+
+        setTimeout(function() {
+          let result = getGameWinner(grid);
+          if (result === "p1" || result === "p2") {
+            let winnerName = (result === "p1") ? currentP1Name : currentP2Name;
+            document.getElementById("masterKey").classList.add("game-over-key");
+
+            setTimeout(function() {
+              alert("Game over! Winner: " + winnerName);
+              window.clearSeats();
+              localStorage.removeItem("mySeat");
+              localStorage.removeItem("myName");
+            }, 50);
+          } else {
+            document.getElementById("masterKey").classList.remove("game-over-key");
+          }
+        }, 50);
+      });
+
+      // Wire up clicks for each cell — set up ONCE, not on every grid update
+      document.getElementById("masterKey").addEventListener("click", function() {
+        handleCellClick("masterKey", null);
+      });
+
+      ["row1", "row2", "row3"].forEach(function(rowName) {
+        ["key", "p1", "p2"].forEach(function(col) {
+          document.getElementById(rowName + "-" + col)
+            .addEventListener("click", function() {
+              handleCellClick(rowName, col);
+            });
+        });
+      });
+
+      document.getElementById("joinBtn").addEventListener("click", function() {
+        window.claimSeat(function(mySeat) {
+          // now genuinely, deliberately claimed
+        });
+      });
+
+      document.getElementById("newGameBtn").addEventListener("click", function() {
+        let mySeat = localStorage.getItem("mySeat");
+        if (mySeat !== "p1" && mySeat !== "p2") {
+          alert("Only currently joined players can restart the current game.");
+          return;
+        }
+        resetGridAndSeats();
       });
     });
 
-    function newGame() {
-  let emptyGrid = {
-    row1: { p1: null, p2: null, key: null },
-    row2: { p1: null, p2: null, key: null },
-    row3: { p1: null, p2: null, key: null },
-    masterKey: null
-  };
-  window.saveGrid(emptyGrid);
-}
+    document.getElementById("forceResetBtn").addEventListener("click", function() {
+      let sure = confirm("This will remove both players and reset the board. Only do this if the game seems stuck or abandoned. Continue?");
+      if (!sure) return;
+      resetGridAndSeats();
+    });
 
-document.getElementById("newGameBtn").addEventListener("click", newGame);
+    // TESTING ONLY — quickly fills 9 of 10 cells so you only need to place
+    // one more to trigger the endgame check. Remove before sharing widely.
+    document.getElementById("nineGrid").addEventListener("click", function() {
+      let testGrid = {
+        row1: { p1: 8, p2: 2, key: 3 },
+        row2: { p1: 4, p2: 6, key: 7 },
+        row3: { p1: 5, p2: 10, key: 9 },
+        masterKey: null
+      };
+      window.saveGrid(testGrid);
+    });
   </script>
-
 </body>
 </html>
-
-<!-- Terminal commands below to push edits to https://jacobwallsmith.github.io/superposition/
-git add .
-git commit -m "Reword rules text"
-git push -->
